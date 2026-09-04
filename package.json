@@ -1,0 +1,109 @@
+{
+  "name": "scss-variable-suggest",
+  "displayName": "Variable Suggest (SCSS/Less/CSS)",
+  "description": "Suggests replacing raw values (e.g. 15px) with matching design-token variables as you type, and autocompletes SCSS @mixin/@function calls with their parameter signatures. Accept with Tab or Enter.",
+  "version": "0.2.0",
+  "publisher": "made-media",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:scss",
+    "onLanguage:sass",
+    "onLanguage:less",
+    "onLanguage:css",
+    "onLanguage:vue"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "variableSuggest.rescan",
+        "title": "Variable Suggest: Rescan Variable Files"
+      }
+    ],
+    "configuration": {
+      "title": "Variable Suggest",
+      "properties": {
+        "variableSuggest.variableFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/_variables.scss",
+            "**/variables.scss",
+            "**/_variables.less",
+            "**/variables.less",
+            "**/_tokens.scss",
+            "**/tokens.scss",
+            "**/tokens.css",
+            "**/_tokens.less",
+            "**/_mixins.scss",
+            "**/mixins.scss",
+            "**/_functions.scss",
+            "**/functions.scss"
+          ],
+          "description": "Glob patterns (relative to each workspace root) for files to scan. SCSS ($name: value;), Less (@name: value;) and CSS custom properties (--name: value;) are parsed as variables; SCSS @mixin/@function definitions are parsed for name+signature completion. Matched against every open project — good for conventional filenames."
+        },
+        "variableSuggest.projectVariableFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Exact variable file paths (relative to each open workspace root), for projects whose variable file doesn't match `variableSuggest.variableFiles`' naming conventions. Applies to every open project — no workspace folder name to match. Set this in your *User* Settings to pin precise paths without adding any config to the project itself:\n```json\n\"variableSuggest.projectVariableFiles\": [\n  \"baseplate/source/stylesheets/_variables.scss\"\n]\n```"
+        },
+        "variableSuggest.projectMapFunctions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string",
+                "description": "SCSS map variable name, without the $ (e.g. \"colors\")."
+              },
+              "function": {
+                "type": "string",
+                "description": "Function to call, e.g. \"get-color\"."
+              },
+              "omitTrailingIfEquals": {
+                "type": "string",
+                "description": "Optional: drop the leaf's final key from the call when it equals this value (e.g. \"base\"), matching a function's default parameter."
+              }
+            },
+            "required": ["variable", "function"]
+          },
+          "default": [],
+          "markdownDescription": "Reverse-lookup config. Applies to every open project — no workspace folder name to match. Each entry flattens a (possibly nested) SCSS map — `$<variable>` — into its leaf values, so typing a literal that matches a leaf suggests calling `<function>(<key path>)` instead.\n\nExample — for\n```scss\n$colors: (brand: (primary: #D72020), text: (base: #000));\n$font-scales: (body: (7: 20px));\n```\nwith\n```scss\n@function get-color($palette, $tone: 'base') { ... }\n@function font-scale($stack, $index) { ... }\n```\nset:\n```json\n\"variableSuggest.projectMapFunctions\": [\n  { \"variable\": \"colors\", \"function\": \"get-color\", \"omitTrailingIfEquals\": \"base\" },\n  { \"variable\": \"font-scales\", \"function\": \"font-scale\" }\n]\n```\nThen typing `#D72020` suggests `get-color(brand, primary)`, `#000` suggests `get-color(text)` (trailing `base` omitted since it's the default), and `20px` suggests `font-scale(body, 7)`."
+        },
+        "variableSuggest.exclude": {
+          "type": "string",
+          "default": "**/{node_modules,vendor,dist,build,_generated}/**",
+          "description": "Glob pattern excluded when searching for variable files."
+        },
+        "variableSuggest.maxSuggestions": {
+          "type": "number",
+          "default": 25,
+          "description": "Maximum number of variable suggestions to show at once."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0",
+    "@vscode/vsce": "^2.24.0"
+  }
+}
